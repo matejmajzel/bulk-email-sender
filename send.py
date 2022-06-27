@@ -1,7 +1,9 @@
-import csv
+import csv, ssl, time
+from email.mime.image import MIMEImage
 import os
-from settings import SENDER_EMAIL, PASSWORD, DISPLAY_NAME
+from settings import SENDER_EMAIL, PASSWORD, DISPLAY_NAME, SUBJECT
 from smtplib import SMTP
+import smtplib
 import markdown
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -32,7 +34,7 @@ def confirm_attachments():
 
             entry = input(f"""TYPE IN 'Y' AND PRESS ENTER IF YOU CONFIRM T0 ATTACH {filename} 
                                     TO SKIP PRESS ENTER: """)
-            confirmed = True if entry == 'Y' else False
+            confirmed = True #if entry == 'Y' else False
             if confirmed:
                 file_names.append(filename)
                 with open(f'{os.getcwd()}/ATTACH/{filename}', "rb") as f:
@@ -53,7 +55,7 @@ def send_emails(server: SMTP, template):
 
         multipart_msg = MIMEMultipart("alternative")
 
-        multipart_msg["Subject"] = message.splitlines()[0]
+        multipart_msg["Subject"] = SUBJECT
         multipart_msg["From"] = DISPLAY_NAME + f' <{SENDER_EMAIL}>'
         multipart_msg["To"] = receiver
 
@@ -66,14 +68,14 @@ def send_emails(server: SMTP, template):
         multipart_msg.attach(part1)
         multipart_msg.attach(part2)
 
-        if attachments:
-            for content, name in zip(attachments['contents'], attachments['names']):
-                attach_part = MIMEBase('application', 'octet-stream')
-                attach_part.set_payload(content)
-                encoders.encode_base64(attach_part)
-                attach_part.add_header('Content-Disposition',
-                                       f"attachment; filename={name}")
-                multipart_msg.attach(attach_part)
+        
+        for content, name in zip(attachments['contents'], attachments['names']):
+            attach_part = MIMEImage('application', 'octet-stream')
+            attach_part.set_payload(content)
+            encoders.encode_base64(attach_part)
+            attach_part.add_header('Content-Disposition',
+                                    f"attachment; filename={name}")
+            multipart_msg.attach(attach_part)
 
         try:
             server.sendmail(SENDER_EMAIL, receiver,
@@ -84,27 +86,29 @@ def send_emails(server: SMTP, template):
             input("PRESS ENTER TO CONTINUE")
         else:
             sent_count += 1
+        time.sleep(5)
 
     print(f"Sent {sent_count} emails")
 
 
 if __name__ == "__main__":
-    host = "smtp.gmail.com"
-    port = 587  # TLS replaced SSL in 1999
-
+    host = "smtp.m1.websupport.sk"
+    port = 465  # TLS replaced SSL in 1999
+    context = ssl.create_default_context()
     with open('compose.md') as f:
         template = f.read()
+    try:
+        with smtplib.SMTP_SSL(host, port) as server:
+            server.connect(host=host, port=port)
+            server.ehlo()
+            server.login(user=SENDER_EMAIL, password=PASSWORD)
 
-    server = SMTP(host=host, port=port)
-    server.connect(host=host, port=port)
-    server.ehlo()
-    server.starttls()
-    server.ehlo()
-    server.login(user=SENDER_EMAIL, password=PASSWORD)
-
-    send_emails(server, template)
-
-    server.quit()
+            send_emails(server, template)
+            server.quit()
+    except Exception as e:
+        # Print any error messages to stdout
+        print(e)
+    
 
 
 # AAHNIK 2020
