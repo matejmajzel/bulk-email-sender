@@ -51,7 +51,7 @@ def send_emails(server: SMTP, template):
     attachments = confirm_attachments()
     sent_count = 0
 
-    for receiver, message in get_msg('data.csv', template):
+    for receiver, message in get_msg('data-demo.csv', template):
 
         multipart_msg = MIMEMultipart("alternative")
 
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     host = "smtp.m1.websupport.sk"
     port = 465  # TLS replaced SSL in 1999
     context = ssl.create_default_context()
-    with open('compose.md') as f:
+    with open('compose.md', encoding="utf-8") as f:
         template = f.read()
     try:
         with smtplib.SMTP_SSL(host, port) as server:
