@@ -13,11 +13,11 @@ from email import encoders
 
 def get_msg(csv_file_path, template):
     with open(csv_file_path, 'r') as file:
-        headers = file.readline().split(',')
+        headers = file.readline().split(';')
         headers[len(headers) - 1] = headers[len(headers) - 1][:-1]
     # i am opening the csv file two times above and below INTENTIONALLY, changing will cause error
     with open(csv_file_path, 'r') as file:
-        data = csv.DictReader(file)
+        data = csv.DictReader(file, delimiter=";")
         for row in data:
             required_string = template
             for header in headers:
@@ -51,7 +51,7 @@ def send_emails(server: SMTP, template):
     attachments = confirm_attachments()
     sent_count = 0
 
-    for receiver, message in get_msg('data-demo.csv', template):
+    for receiver, message in get_msg('prod-textence.csv', template):
 
         multipart_msg = MIMEMultipart("alternative")
 
@@ -86,9 +86,12 @@ def send_emails(server: SMTP, template):
             input("PRESS ENTER TO CONTINUE")
         else:
             sent_count += 1
-        time.sleep(5)
+        print(f"Sent {sent_count} emails")
+        time.sleep(10)
+        
 
-    print(f"Sent {sent_count} emails")
+    print(f"Finished with the count: {sent_count} emails")
+    
 
 
 if __name__ == "__main__":
