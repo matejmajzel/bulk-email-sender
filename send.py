@@ -29,7 +29,7 @@ def get_msg(csv_file_path, template):
                     value = row[header]
                     if value == "M":
                         required_string = required_string.replace(f'${header}', "Mr.")
-                    if value == "F":
+                    if value == "Z":
                         required_string = required_string.replace(f'${header}', "Mrs.")
                 
 
