@@ -12,11 +12,11 @@ from email import encoders
 
 
 def get_msg(csv_file_path, template):
-    with open(csv_file_path, 'r') as file:
+    with open(csv_file_path, encoding="utf8") as file:
         headers = file.readline().split(';')
         headers[len(headers) - 1] = headers[len(headers) - 1][:-1]
     # i am opening the csv file two times above and below INTENTIONALLY, changing will cause error
-    with open(csv_file_path, 'r') as file:
+    with open(csv_file_path, 'r', encoding="utf8") as file:
         data = csv.DictReader(file, delimiter=";")
         for row in data:
             required_string = template
@@ -31,6 +31,7 @@ def get_msg(csv_file_path, template):
                         required_string = required_string.replace(f'${header}', "Mr.")
                     if value == "F":
                         required_string = required_string.replace(f'${header}', "Mrs.")
+                
 
             yield row['EMAIL'], required_string
 
@@ -50,8 +51,8 @@ def send_emails(server: SMTP, template):
         text = message
         html = markdown.markdown(text)
 
-        part1 = MIMEText(text, "plain")
-        part2 = MIMEText(html, "html")
+        part1 = MIMEText(text, "plain", "utf-16")
+        part2 = MIMEText(html, "html", "utf-16")
 
         multipart_msg.attach(part1)
         multipart_msg.attach(part2)
