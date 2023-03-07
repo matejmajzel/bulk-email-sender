@@ -21,15 +21,13 @@ def get_msg(csv_file_path, template):
         for row in data:
             required_string = template
             for header in headers:
-                if header == "NAME" or header == "EMAIL":
-                    value = row[header]
-                    required_string = required_string.replace(f'${header}', value)
+                value = row[header]
+                required_string = required_string.replace(f'${header}', value)
 
-                if header == "SEX":
-                    value = row[header]
-                    if value == "M":
+                if header == "SEX"
+                    if value == "M"
                         required_string = required_string.replace(f'${header}', "Mr.")
-                    if value == "F":
+                    if value == "F"
                         required_string = required_string.replace(f'${header}', "Mrs.")
 
             yield row['EMAIL'], required_string
@@ -66,7 +64,7 @@ def send_emails(server: SMTP, template):
             input("PRESS ENTER TO CONTINUE")
         else:
             sent_count += 1
-        print(f"Sent {sent_count} emails") 
+        print(f"Sent {sent_count} emails")
         time.sleep(10)
         
 

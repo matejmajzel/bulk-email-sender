@@ -21,22 +21,34 @@ def get_msg(csv_file_path, template):
         for row in data:
             required_string = template
             for header in headers:
-                if header == "NAME" or header == "EMAIL":
-                    value = row[header]
-                    required_string = required_string.replace(f'${header}', value)
-
-                if header == "SEX":
-                    value = row[header]
-                    if value == "M":
-                        required_string = required_string.replace(f'${header}', "Mr.")
-                    if value == "F":
-                        required_string = required_string.replace(f'${header}', "Mrs.")
-
+                value = row[header]
+                required_string = required_string.replace(f'${header}', value)
             yield row['EMAIL'], required_string
+
+
+def confirm_attachments():
+    file_contents = []
+    file_names = []
+    try:
+        for filename in os.listdir('ATTACH'):
+
+            entry = input(f"""TYPE IN 'Y' AND PRESS ENTER IF YOU CONFIRM T0 ATTACH {filename} 
+                                    TO SKIP PRESS ENTER: """)
+            confirmed = True #if entry == 'Y' else False
+            if confirmed:
+                file_names.append(filename)
+                with open(f'{os.getcwd()}/ATTACH/{filename}', "rb") as f:
+                    content = f.read()
+                file_contents.append(content)
+
+        return {'names': file_names, 'contents': file_contents}
+    except FileNotFoundError:
+        print('No ATTACH directory found...')
 
 
 def send_emails(server: SMTP, template):
 
+    attachments = confirm_attachments()
     sent_count = 0
 
     for receiver, message in get_msg('prod-textence.csv', template):
@@ -56,6 +68,14 @@ def send_emails(server: SMTP, template):
         multipart_msg.attach(part1)
         multipart_msg.attach(part2)
 
+        
+        for content, name in zip(attachments['contents'], attachments['names']):
+            attach_part = MIMEImage('application', 'octet-stream')
+            attach_part.set_payload(content)
+            encoders.encode_base64(attach_part)
+            attach_part.add_header('Content-Disposition',
+                                    f"attachment; filename={name}")
+            multipart_msg.attach(attach_part)
 
         try:
             server.sendmail(SENDER_EMAIL, receiver,
@@ -66,7 +86,7 @@ def send_emails(server: SMTP, template):
             input("PRESS ENTER TO CONTINUE")
         else:
             sent_count += 1
-        print(f"Sent {sent_count} emails") 
+        print(f"Sent {sent_count} emails")
         time.sleep(10)
         
 
